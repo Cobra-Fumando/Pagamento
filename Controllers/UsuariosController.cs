@@ -10,12 +10,10 @@ namespace Pic.Controllers
     public class UsuariosController : ControllerBase
     {
         private readonly Users users;
-        private readonly Enviar enviar;
 
-        public UsuariosController(Users users, Enviar enviar)
+        public UsuariosController(Users users)
         {
             this.users = users;
-            this.enviar = enviar;
         }
 
         [HttpPost("Criar")]

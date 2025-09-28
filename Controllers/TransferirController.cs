@@ -11,11 +11,9 @@ namespace Pic.Controllers
     [ApiController]
     public class TransferirController : ControllerBase
     {
-        private readonly Users users;
         private readonly Enviar enviar;
-        public TransferirController(Users users, Enviar enviar)
+        public TransferirController(Enviar enviar)
         {
-            this.users = users;
             this.enviar = enviar;
         }
 
