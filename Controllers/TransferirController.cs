@@ -26,15 +26,30 @@ namespace Pic.Controllers
 
             if (id is null) return Unauthorized("Token inválido");
 
-            if(!int.TryParse(id, out int Id))
-            {
-                return BadRequest(new {Mensagem = "Id invalido"});
-            }
+            if(!int.TryParse(id, out int Id)) return BadRequest(new {Mensagem = "Id invalido"});
 
             var result = await enviar.Transacao(Id, transferir.Valor, transferir.EmailT);
 
             if(!result.Sucesso) return BadRequest(new { Mensagem = result.Mensagem });
             return Ok(new { Mensagem = result.Mensagem } );
+        }
+
+        [HttpGet("GetTransacoes")]
+        [Authorize(AuthenticationSchemes = "Usuarios")]
+        [EnableRateLimiting("Fixed")]
+        public async Task<IActionResult> GetTransacoes()
+        {
+            var id = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+
+            if (id is null) return Unauthorized("Token inválido");
+
+            if(!int.TryParse(id, out int Id)) return BadRequest(new {Mensagem = "Id invalido"});
+
+            var result = await enviar.GetTransacao(Id);
+
+            if(!result.Sucesso) return BadRequest(new { Mensagem = result.Mensagem });
+
+            return Ok(new { Mensagem = result.Mensagem, Dados = result.Dados } );
         }
     }
 }

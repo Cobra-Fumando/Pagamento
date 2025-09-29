@@ -135,5 +135,5 @@ C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\refint\Pic.dll
 C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\Pic.pdb
 C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\Pic.genruntimeconfig.cache
 C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\ref\Pic.dll
-C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
 C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\Pic.sourcelink.json
+C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt

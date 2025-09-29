@@ -2,9 +2,9 @@
 {
     public class StatusProblem
     {
-        public static TabelaProblem<string> Ok(string message = "Sucesso", string data = "")
+        public static TabelaProblem<T> Ok<T>(string message = "Sucesso", T? data = default)
         {
-            return new TabelaProblem<string>
+            return new TabelaProblem<T>
             {
                 Sucesso = true,
                 Mensagem = message,
@@ -12,9 +12,9 @@
             };
         }
 
-        public static TabelaProblem<string> Fail(string message = "Ocorreu um erro", string data = "")
+        public static TabelaProblem<T> Fail<T>(string message = "Ocorreu um erro", T? data = default)
         {
-            return new TabelaProblem<string>
+            return new TabelaProblem<T>
             {
                 Sucesso = false,
                 Mensagem = message,

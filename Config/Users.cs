@@ -16,7 +16,7 @@ namespace Pic.Config
             this.token = token;
         }
 
-        public async Task<TabelaProblem<string>> Criar(UsuarioDto usuario)
+        public async Task<TabelaProblem<UsuarioDto>> Criar(UsuarioDto usuario)
         {
             var users = new Usuario
             {
@@ -28,17 +28,17 @@ namespace Pic.Config
             await context.Usuarios.AddAsync(users);
             await context.SaveChangesAsync();
 
-            return StatusProblem.Ok("Criado com sucesso");
+            return StatusProblem.Ok("Criado com sucesso", usuario);
         }
 
         public async Task<TabelaProblem<string>> Logar(Logar logar)
         {
             var Verificado = EmailVerify.IsValidEmail(logar.Email);
-            if (!Verificado) return StatusProblem.Fail("Email inválido");
+            if (!Verificado) return StatusProblem.Fail<string>("Email inválido");
 
             var user = await context.Usuarios.Where(p => p.Email == logar.Email && p.Senha == logar.Senha).FirstOrDefaultAsync();
 
-            if(user is null) return StatusProblem.Fail("Usuario ou Senha errado");
+            if(user is null) return StatusProblem.Fail<string>("Usuario ou Senha errado");
 
             var tokenGerado = token.GenerateToken(user);
             return StatusProblem.Ok("Login realizado com sucesso", tokenGerado);
