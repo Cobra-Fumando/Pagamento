@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using Pic.Parametros;
 using Pic.Tables;
 using System.IdentityModel.Tokens.Jwt;
 
@@ -17,7 +18,7 @@ namespace Pic.Classes
             Audience = configuration["Bearer:Audience"];
         }
 
-        public string GenerateToken(Usuario usuario)
+        public string GenerateToken(UsuarioLoginDto usuario)
         {
             var securityKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(Key));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);

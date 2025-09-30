@@ -16,6 +16,7 @@ builder.Services.AddOpenApi();
 
 //builder.Services.AddScoped<EmailVerify>();
 builder.Services.AddSingleton<Token>();
+builder.Services.AddSingleton<PasswordHash>();
 builder.Services.AddScoped<Enviar>();
 builder.Services.AddScoped<Users>();
 

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Pic.Classes;
+using Pic.Condicao;
 using Pic.Context;
 using Pic.Parametros;
 using Pic.Tables;
@@ -10,38 +11,74 @@ namespace Pic.Config
     {
         private readonly AppDbContext context;
         private readonly Token token;
-        public Users(AppDbContext context, Token token)
+        private readonly PasswordHash passwordHash;
+        public Users(AppDbContext context, Token token, PasswordHash passwordHash)
         {
             this.context = context;
             this.token = token;
+            this.passwordHash = passwordHash;
         }
 
         public async Task<TabelaProblem<UsuarioDto>> Criar(UsuarioDto usuario)
         {
-            var users = new Usuario
+            try
             {
-                Nome = usuario.Nome,
-                Senha = usuario.Senha,
-                Email = usuario.Email.ToLower(),
-            };
+                if (usuario is null) return StatusProblem.Fail<UsuarioDto>("Dados inválidos");
 
-            await context.Usuarios.AddAsync(users);
-            await context.SaveChangesAsync();
+                var result = CriarUser.ValidarCodicao(usuario);
+                if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
 
-            return StatusProblem.Ok("Criado com sucesso", usuario);
+                bool existe = await context.Usuarios.AnyAsync(p => p.Email.ToLower() == usuario.Email.ToLower());
+                if (existe) return StatusProblem.Fail<UsuarioDto>("Email já cadastrado");
+
+                string Hash = passwordHash.Hashar(usuario.Senha);
+
+                var users = new Usuario
+                {
+                    Nome = usuario.Nome,
+                    Senha = Hash,
+                    Email = usuario.Email.ToLower(),
+                };
+
+                usuario.Email = users.Email;
+
+                await context.Usuarios.AddAsync(users);
+                await context.SaveChangesAsync();
+
+                return StatusProblem.Ok("Criado com sucesso", usuario);
+            }catch(Exception ex)
+            {
+                return StatusProblem.Fail<UsuarioDto>(ex.Message);
+            }
         }
 
         public async Task<TabelaProblem<string>> Logar(Logar logar)
         {
-            var Verificado = EmailVerify.IsValidEmail(logar.Email);
-            if (!Verificado) return StatusProblem.Fail<string>("Email inválido");
+            try
+            {
+                var Verificado = EmailVerify.IsValidEmail(logar.Email);
+                if (!Verificado) return StatusProblem.Fail<string>("Email inválido");
 
-            var user = await context.Usuarios.Where(p => p.Email == logar.Email && p.Senha == logar.Senha).FirstOrDefaultAsync();
+                var user = await context.Usuarios.AsNoTracking()
+                                .Where(p => p.Email == logar.Email)
+                                .Select(p => new UsuarioLoginDto
+                                {
+                                    Id = p.Id,
+                                    Nome = p.Nome,
+                                    Email = p.Email,
+                                    Senha = p.Senha
+                                })
+                                .FirstOrDefaultAsync();
 
-            if(user is null) return StatusProblem.Fail<string>("Usuario ou Senha errado");
+                if (user is null) return StatusProblem.Fail<string>("Email ou Senha errado");
+                if (!passwordHash.Verificar(logar.Senha, user.Senha)) return StatusProblem.Fail<string>("Email ou Senha errado");
 
-            var tokenGerado = token.GenerateToken(user);
-            return StatusProblem.Ok("Login realizado com sucesso", tokenGerado);
+                var tokenGerado = token.GenerateToken(user);
+                return StatusProblem.Ok("Login realizado com sucesso", tokenGerado);
+            }catch(Exception ex)
+            {
+                return StatusProblem.Fail<string>(ex.Message);
+            }
         }
     }
 }
