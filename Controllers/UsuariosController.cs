@@ -23,7 +23,7 @@ namespace Pic.Controllers
             var Result = await users.Criar(usuario);
 
             if (!Result.Sucesso) return BadRequest(new { Mensagem = Result.Mensagem });
-            return Ok(new { Mensagem = Result.Mensagem });
+            return Ok(new { Mensagem = Result.Mensagem, Conta = Result.Dados});
         }
 
         [HttpPost("Logar")]

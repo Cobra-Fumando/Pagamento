@@ -9,10 +9,7 @@ namespace Pic.Classes
             try
             {
                 var adress = new MailAddress(email);
-                bool emaiValido = adress.Address == email;
-
-                if(!emaiValido) return false;
-                return true;
+                return adress.Address == email && email.EndsWith(".com");
             }
             catch(Exception ex)
             {

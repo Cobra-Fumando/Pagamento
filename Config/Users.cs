@@ -25,6 +25,9 @@ namespace Pic.Config
             {
                 if (usuario is null) return StatusProblem.Fail<UsuarioDto>("Dados inválidos");
 
+                var EmailValido = EmailVerify.IsValidEmail(usuario.Email);
+                if (!EmailValido) return StatusProblem.Fail<UsuarioDto>("Email inválido");
+
                 var result = CriarUser.ValidarCodicao(usuario);
                 if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
 
@@ -34,7 +37,7 @@ namespace Pic.Config
                 string Hash = passwordHash.Hashar(usuario.Senha);
 
                 bool valido = VerificarCpf.FormatoCpf(usuario.Cpf);
-                if(!valido) StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
+                if(!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
 
                 var users = new Usuario
                 {
