@@ -38,6 +38,13 @@ namespace Pic.Config
                 transferir.Saldo -= valor;
                 receber.Saldo += valor;
 
+                var transacao = new Transacao
+                {
+                    UsuarioId = transferir.Id,
+                    Valor = valor,
+                };
+
+                await context.Transacaos.AddAsync(transacao);
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
 

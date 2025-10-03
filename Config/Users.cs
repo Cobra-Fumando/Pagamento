@@ -25,26 +25,31 @@ namespace Pic.Config
             {
                 if (usuario is null) return StatusProblem.Fail<UsuarioDto>("Dados inválidos");
 
-                var EmailValido = EmailVerify.IsValidEmail(usuario.Email);
-                if (!EmailValido) return StatusProblem.Fail<UsuarioDto>("Email inválido");
-
                 var result = CriarUser.ValidarCodicao(usuario);
                 if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
 
-                bool existe = await context.Usuarios.AnyAsync(p => p.Email.ToLower() == usuario.Email.ToLower());
-                if (existe) return StatusProblem.Fail<UsuarioDto>("Email já cadastrado");
+                bool valido = VerificarCpf.FormatoCpf(usuario.Cpf, out string CpfReplace);
+                if(!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
+
+                var Usuarioexiste = await context.Usuarios
+                                    .AsNoTracking().
+                                    FirstAsync(p => p.Email.ToLower() == usuario.Email.ToLower() || p.Cpf == CpfReplace);
+
+                if (Usuarioexiste != null)
+                {
+                    if (usuario.Email.ToLower() == Usuarioexiste.Email.ToLower()) return StatusProblem.Fail<UsuarioDto>("Email já cadastrado");
+                    if (Usuarioexiste.Cpf == CpfReplace) return StatusProblem.Fail<UsuarioDto>("Cpf já cadastrado");
+
+                }
 
                 string Hash = passwordHash.Hashar(usuario.Senha);
-
-                bool valido = VerificarCpf.FormatoCpf(usuario.Cpf);
-                if(!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
 
                 var users = new Usuario
                 {
                     Nome = usuario.Nome,
                     Senha = Hash,
                     Email = usuario.Email.ToLower(),
-                    Cpf = usuario.Cpf
+                    Cpf = CpfReplace
                 };
 
                 usuario.Email = users.Email;
