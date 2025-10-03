@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -16,6 +17,7 @@ builder.Services.AddOpenApi();
 
 //builder.Services.AddScoped<EmailVerify>();
 builder.Services.AddSingleton<Token>();
+builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 builder.Services.AddSingleton<PasswordHash>();
 builder.Services.AddScoped<Enviar>();
 builder.Services.AddScoped<Users>();

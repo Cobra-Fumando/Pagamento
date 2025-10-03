@@ -33,11 +33,15 @@ namespace Pic.Config
 
                 string Hash = passwordHash.Hashar(usuario.Senha);
 
+                bool valido = VerificarCpf.FormatoCpf(usuario.Cpf);
+                if(!valido) StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
+
                 var users = new Usuario
                 {
                     Nome = usuario.Nome,
                     Senha = Hash,
                     Email = usuario.Email.ToLower(),
+                    Cpf = usuario.Cpf
                 };
 
                 usuario.Email = users.Email;

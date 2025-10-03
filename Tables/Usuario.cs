@@ -12,6 +12,9 @@ namespace Pic.Tables
         [Required(ErrorMessage = "Nome não definido")]
         public required string Nome { get; set; }
 
+        [Required(ErrorMessage = "Cpf é obrigatório")]
+        public required string Cpf { get; set; }
+
         [Required(ErrorMessage = "Senha não definida")]
         public required string Senha { get; set; }
 

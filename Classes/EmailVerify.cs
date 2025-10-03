@@ -8,10 +8,13 @@ namespace Pic.Classes
         {
             try
             {
-                var addr = new MailAddress(email);
-                return addr.Address == email;
+                var adress = new MailAddress(email);
+                bool emaiValido = adress.Address == email;
+
+                if(!emaiValido) return false;
+                return true;
             }
-            catch
+            catch(Exception ex)
             {
                 return false;
             }
