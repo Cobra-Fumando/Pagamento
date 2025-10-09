@@ -26,19 +26,23 @@ namespace Pic.Config
             var result = CriarUser.ValidarCodicao(usuario);
             if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
 
-            bool valido = VerificarCpf.FormatoCpf(usuario.Cpf, out string CpfReplace);
+            bool valido = VerificarRegex.FormatoCpf(usuario.Cpf, out string CpfReplace);
             if (!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
+
+            bool validoTel = VerificarRegex.FormatoTelefone(usuario.Telefone, out string TelefoneReplace);
+            if (!validoTel) return StatusProblem.Fail<UsuarioDto>("Formato do telefone invalido");
 
             try
             {
                 var Usuarioexiste = await context.Usuarios
                                     .AsNoTracking().
-                                    FirstAsync(p => p.Email.ToLower() == usuario.Email.ToLower() || p.Cpf == CpfReplace);
+                                    FirstOrDefaultAsync(p => p.Email.ToLower() == usuario.Email.ToLower() || p.Cpf == CpfReplace || p.Telefone == TelefoneReplace);
 
                 if (Usuarioexiste != null)
                 {
                     if (usuario.Email.ToLower() == Usuarioexiste.Email.ToLower()) return StatusProblem.Fail<UsuarioDto>("Email já cadastrado");
                     if (Usuarioexiste.Cpf == CpfReplace) return StatusProblem.Fail<UsuarioDto>("Cpf já cadastrado");
+                    if (Usuarioexiste.Telefone == TelefoneReplace) return StatusProblem.Fail<UsuarioDto>("Telefone já cadastrado");
                 }
 
                 string Hash = passwordHash.Hashar(usuario.Senha);
@@ -48,6 +52,7 @@ namespace Pic.Config
                     Nome = usuario.Nome,
                     Senha = Hash,
                     Email = usuario.Email.ToLower(),
+                    Telefone = TelefoneReplace,
                     Cpf = CpfReplace
                 };
 

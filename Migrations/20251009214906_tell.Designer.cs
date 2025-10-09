@@ -11,8 +11,8 @@ using Pic.Context;
 namespace Pic.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251009210606_Protected")]
-    partial class Protected
+    [Migration("20251009214906_tell")]
+    partial class tell
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -76,6 +76,10 @@ namespace Pic.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Cpf")
@@ -85,6 +89,9 @@ namespace Pic.Migrations
                         .IsUnique();
 
                     b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("Telefone")
                         .IsUnique();
 
                     b.ToTable("Usuario");

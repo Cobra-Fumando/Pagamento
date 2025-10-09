@@ -73,6 +73,10 @@ namespace Pic.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Telefone")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Cpf")
@@ -82,6 +86,9 @@ namespace Pic.Migrations
                         .IsUnique();
 
                     b.HasIndex("Id")
+                        .IsUnique();
+
+                    b.HasIndex("Telefone")
                         .IsUnique();
 
                     b.ToTable("Usuario");

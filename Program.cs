@@ -47,28 +47,47 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             {
                 OnAuthenticationFailed = context =>
                 {
-                    context.Response.StatusCode = 401;
-                    context.Response.ContentType = "application/json";
+                    if (!context.Response.HasStarted)
+                    {
+                        context.Response.StatusCode = 401;
+                        context.Response.ContentType = "application/json";
 
-                    return context.Response.WriteAsync("{\"Mensagem\": \"Falha ao fazer a requisição\"}");
+                        if (context.Exception is SecurityTokenExpiredException)
+                        {
+                            return context.Response.WriteAsync("{\"Mensagem\": \"Token expirado\"}");
+                        }
+                        else
+                        {
+                            return context.Response.WriteAsync("{\"Mensagem\": \"Token inválido\"}");
+                        }
+                    }
+                    return Task.CompletedTask;
                 },
 
                 OnForbidden = context =>
                 {
-                    context.Response.StatusCode = 403;
-                    context.Response.ContentType = "application/json";
-
-                    return context.Response.WriteAsync("{\"Mensagem\": \"Você não tem permissão para fazer isso\"}");
+                    if (!context.Response.HasStarted)
+                    {
+                        context.Response.StatusCode = 403;
+                        context.Response.ContentType = "application/json";
+                        return context.Response.WriteAsync("{\"Mensagem\": \"Você não tem permissão para fazer isso\"}");
+                    }
+                    return Task.CompletedTask;
                 },
 
                 OnChallenge = context =>
                 {
                     context.HandleResponse();
-                    context.Response.StatusCode = 401;
-                    context.Response.ContentType = "application/json";
-                    return context.Response.WriteAsync("{\"Mensagem\": \"Nenhum Token enviado\"}");
+                    if (!context.Response.HasStarted)
+                    {
+                        context.Response.StatusCode = 401;
+                        context.Response.ContentType = "application/json";
+                        return context.Response.WriteAsync("{\"Mensagem\": \"Nenhum Token enviado\"}");
+                    }
+                    return Task.CompletedTask;
                 },
             };
+
         });
 
 builder.Services.AddRateLimiter(p =>

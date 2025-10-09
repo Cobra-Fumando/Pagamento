@@ -7,6 +7,7 @@ namespace Pic.Tables
     [Table("Usuario")]
     [Index(nameof(Cpf), IsUnique = true)]
     [Index(nameof(Email), IsUnique = true)]
+    [Index(nameof(Telefone), IsUnique = true)]
     [Index(nameof(Id), IsUnique = true)]
     public class Usuario
     {
@@ -24,6 +25,9 @@ namespace Pic.Tables
 
         [Required(ErrorMessage = "Email não definido")]
         public required string Email { get; set; }
+
+        [Required(ErrorMessage = "Número de telefone é obrigatório")]
+        public required string Telefone { get; set; }
 
         public decimal? Saldo { get; set; } = 0;
 
