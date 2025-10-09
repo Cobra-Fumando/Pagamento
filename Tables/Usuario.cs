@@ -1,9 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Pic.Tables
 {
     [Table("Usuario")]
+    [Index(nameof(Cpf), IsUnique = true)]
+    [Index(nameof(Email), IsUnique = true)]
+    [Index(nameof(Id), IsUnique = true)]
     public class Usuario
     {
         [Key]

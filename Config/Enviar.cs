@@ -40,6 +40,7 @@ namespace Pic.Config
 
                 var transacao = new Transacao
                 {
+                    UsuarioName = transferir.Nome,
                     UsuarioId = transferir.Id,
                     Valor = valor,
                 };

@@ -21,16 +21,16 @@ namespace Pic.Config
 
         public async Task<TabelaProblem<UsuarioDto>> Criar(UsuarioDto usuario)
         {
+            if (usuario is null) return StatusProblem.Fail<UsuarioDto>("Dados inválidos");
+
+            var result = CriarUser.ValidarCodicao(usuario);
+            if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
+
+            bool valido = VerificarCpf.FormatoCpf(usuario.Cpf, out string CpfReplace);
+            if (!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
+
             try
             {
-                if (usuario is null) return StatusProblem.Fail<UsuarioDto>("Dados inválidos");
-
-                var result = CriarUser.ValidarCodicao(usuario);
-                if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
-
-                bool valido = VerificarCpf.FormatoCpf(usuario.Cpf, out string CpfReplace);
-                if(!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
-
                 var Usuarioexiste = await context.Usuarios
                                     .AsNoTracking().
                                     FirstAsync(p => p.Email.ToLower() == usuario.Email.ToLower() || p.Cpf == CpfReplace);
@@ -39,7 +39,6 @@ namespace Pic.Config
                 {
                     if (usuario.Email.ToLower() == Usuarioexiste.Email.ToLower()) return StatusProblem.Fail<UsuarioDto>("Email já cadastrado");
                     if (Usuarioexiste.Cpf == CpfReplace) return StatusProblem.Fail<UsuarioDto>("Cpf já cadastrado");
-
                 }
 
                 string Hash = passwordHash.Hashar(usuario.Senha);
@@ -58,7 +57,13 @@ namespace Pic.Config
                 await context.SaveChangesAsync();
 
                 return StatusProblem.Ok("Criado com sucesso", usuario);
-            }catch(Exception ex)
+            }
+            catch (DbUpdateException ex) when(
+                ex.InnerException?.Message.Contains("UQ_Email") == true || ex.InnerException?.Message.Contains("UQ_Cpf") == true) 
+            {
+                return StatusProblem.Fail<UsuarioDto>("Email ou Cpf já cadastrado");
+            }
+            catch (Exception ex)
             {
                 return StatusProblem.Fail<UsuarioDto>(ex.Message);
             }
@@ -87,7 +92,8 @@ namespace Pic.Config
 
                 var tokenGerado = token.GenerateToken(user);
                 return StatusProblem.Ok("Login realizado com sucesso", tokenGerado);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 return StatusProblem.Fail<string>(ex.Message);
             }
