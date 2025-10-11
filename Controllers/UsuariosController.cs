@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Pic.Config;
 using Pic.Parametros;
+using Pic.Interface;
 
 namespace Pic.Controllers
 {
@@ -9,9 +10,9 @@ namespace Pic.Controllers
     [ApiController]
     public class UsuariosController : ControllerBase
     {
-        private readonly Users users;
+        private readonly IUsers users;
 
-        public UsuariosController(Users users)
+        public UsuariosController(IUsers users)
         {
             this.users = users;
         }

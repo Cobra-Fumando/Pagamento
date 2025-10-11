@@ -2,10 +2,11 @@
 using Pic.Classes;
 using Pic.Context;
 using Pic.Tables;
+using Pic.Interface;
 
 namespace Pic.Config
 {
-    public class Enviar
+    public class Enviar : IEnviar
     {
         private readonly AppDbContext context;
         public Enviar(AppDbContext context)

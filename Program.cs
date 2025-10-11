@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Pic.Classes;
 using Pic.Config;
+using Pic.Interface;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,8 +21,8 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<Token>();
 builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 builder.Services.AddSingleton<PasswordHash>();
-builder.Services.AddScoped<Enviar>();
-builder.Services.AddScoped<Users>();
+builder.Services.AddScoped<IEnviar,Enviar>();
+builder.Services.AddScoped<IUsers, Users>();
 
 builder.Services.AddHttpContextAccessor();
 
@@ -107,6 +108,7 @@ builder.Services.AddRateLimiter(p =>
         options.QueueProcessingOrder = System.Threading.RateLimiting.QueueProcessingOrder.OldestFirst;
         options.QueueLimit = 0;
     });
+
 });
 
 builder.Services.AddResponseCompression(options =>
@@ -133,6 +135,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseMiddleware<Pic.Middleware.PrimeiroMiddleware>();
 
 app.UseHttpsRedirection();
 

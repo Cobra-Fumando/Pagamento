@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Pic.Config;
+using Pic.Interface;
 using Pic.Parametros;
 
 namespace Pic.Controllers
@@ -11,8 +10,8 @@ namespace Pic.Controllers
     [ApiController]
     public class TransferirController : ControllerBase
     {
-        private readonly Enviar enviar;
-        public TransferirController(Enviar enviar)
+        private readonly IEnviar enviar;
+        public TransferirController(IEnviar enviar)
         {
             this.enviar = enviar;
         }

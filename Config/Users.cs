@@ -4,10 +4,11 @@ using Pic.Condicao;
 using Pic.Context;
 using Pic.Parametros;
 using Pic.Tables;
+using Pic.Interface;
 
 namespace Pic.Config
 {
-    public class Users
+    public class Users : IUsers
     {
         private readonly AppDbContext context;
         private readonly Token token;

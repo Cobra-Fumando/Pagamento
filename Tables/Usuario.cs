@@ -15,9 +15,11 @@ namespace Pic.Tables
         public int Id { get; set; }
 
         [Required(ErrorMessage = "Nome não definido")]
+        [MaxLength(100)]
         public required string Nome { get; set; }
 
         [Required(ErrorMessage = "Cpf é obrigatório")]
+        [MaxLength(11)]
         public required string Cpf { get; set; }
 
         [Required(ErrorMessage = "Senha não definida")]
@@ -27,6 +29,7 @@ namespace Pic.Tables
         public required string Email { get; set; }
 
         [Required(ErrorMessage = "Número de telefone é obrigatório")]
+        [MaxLength(14)]
         public required string Telefone { get; set; }
 
         public decimal? Saldo { get; set; } = 0;
