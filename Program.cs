@@ -135,14 +135,11 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
-app.UseMiddleware<Pic.Middleware.PrimeiroMiddleware>();
-
+app.UseRateLimiter();
 app.UseHttpsRedirection();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseMiddleware<Pic.Middleware.PrimeiroMiddleware>();
 app.MapControllers();
 
 app.Run();

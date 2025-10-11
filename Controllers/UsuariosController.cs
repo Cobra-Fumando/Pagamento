@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Pic.Config;
 using Pic.Parametros;
 using Pic.Interface;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Pic.Controllers
 {
@@ -18,6 +19,7 @@ namespace Pic.Controllers
         }
 
         [HttpPost("Criar")]
+        [EnableRateLimiting("Fixed")]
         public async Task<IActionResult> Criar([FromBody] UsuarioDto usuario)
         {
             if (!ModelState.IsValid) return BadRequest(new { Mensagem = ModelState });
@@ -28,6 +30,7 @@ namespace Pic.Controllers
         }
 
         [HttpPost("Logar")]
+        [EnableRateLimiting("Fixed")]
         public async Task<IActionResult> Login([FromBody] Logar logar)
         {
             if (!ModelState.IsValid) return BadRequest(new { Mensagem = ModelState });
