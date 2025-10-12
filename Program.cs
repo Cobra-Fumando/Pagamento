@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 builder.Services.AddSingleton<PasswordHash>();
 builder.Services.AddScoped<IEnviar,Enviar>();
 builder.Services.AddScoped<IUsers, Users>();
+builder.Services.AddScoped<IProdutos, Produtos>();
 
 builder.Services.AddHttpContextAccessor();
 

@@ -31,7 +31,7 @@ namespace Pic.Config
                 var receber = usuarios.FirstOrDefault(u => u.Email.ToLower() == emailD);
 
                 if(transferir is null) return StatusProblem.Fail<string>("nenhum usuarios encontrado para transferir");
-                if(receber is null) return StatusProblem.Fail<string>("nenhum destinatario nao encontrado");
+                if(receber is null) return StatusProblem.Fail<string>("nenhum destinatario encontrado");
 
                 if(transferir.Id == receber.Id) return StatusProblem.Fail<string>("não é possivel transferir para si mesmo");
                 if(transferir.Saldo < valor) return StatusProblem.Fail<string>("Saldo insuficiente");
@@ -59,13 +59,18 @@ namespace Pic.Config
             }
         }
 
-        public async Task<TabelaProblem<List<Transacao>>> GetTransacao(int id)
+        public async Task<TabelaProblem<List<Transacao>>> GetTransacao(int id, int Tamanho, int pagina)
         {
+            if (pagina < 1) pagina = 1;
+            if (Tamanho < 1) Tamanho = 10;
+
             try
             {
                 var transacoes = await context.Transacaos.AsNoTracking()
-                                    .Where(p => p.UsuarioId == id)
-                                    .ToListAsync();
+                                        .Where(p => p.Id == id)
+                                        .Skip((pagina - 1) * Tamanho)
+                                        .Take(Tamanho)
+                                        .ToListAsync();
 
                 if (transacoes is null || transacoes.Count == 0) return StatusProblem.Fail<List<Transacao>>("Nenhuma transação encontrada");
 

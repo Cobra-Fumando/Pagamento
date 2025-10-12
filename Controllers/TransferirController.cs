@@ -33,10 +33,10 @@ namespace Pic.Controllers
             return Ok(new { Mensagem = result.Mensagem } );
         }
 
-        [HttpGet("GetTransacoes")]
+        [HttpGet("GetTransacoes/{pagina}")]
         [Authorize(AuthenticationSchemes = "Usuarios")]
         [EnableRateLimiting("Fixed")]
-        public async Task<IActionResult> GetTransacoes()
+        public async Task<IActionResult> GetTransacoes(int pagina)
         {
             var id = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
 
@@ -44,7 +44,7 @@ namespace Pic.Controllers
 
             if(!int.TryParse(id, out int Id)) return BadRequest(new {Mensagem = "Id invalido"});
 
-            var result = await enviar.GetTransacao(Id);
+            var result = await enviar.GetTransacao(Id, 10, pagina);
 
             if(!result.Sucesso) return BadRequest(new { Mensagem = result.Mensagem });
 
