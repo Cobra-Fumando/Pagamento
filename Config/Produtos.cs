@@ -4,6 +4,7 @@ using Pic.Interface;
 using Pic.Parametros;
 using Pic.Tables;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace Pic.Config
 {
@@ -11,7 +12,7 @@ namespace Pic.Config
     {
         private readonly AppDbContext context;
         private readonly IEnviar enviar;
-        public Produtos(AppDbContext context, IEnviar enviar) 
+        public Produtos(AppDbContext context, IEnviar enviar)
         {
             this.context = context;
             this.enviar = enviar;
@@ -27,7 +28,7 @@ namespace Pic.Config
                                 .AsNoTracking()
                                 .FirstOrDefaultAsync(p => p.Id == id);
 
-                if(user is null) return StatusProblem.Fail<Produto>("Usuario não encontrado");
+                if (user is null) return StatusProblem.Fail<Produto>("Usuario não encontrado");
 
                 var product = new Produto
                 {
@@ -43,7 +44,7 @@ namespace Pic.Config
                 await context.SaveChangesAsync();
                 return StatusProblem.Ok("Produto adicionado com sucesso", product);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusProblem.Fail<Produto>(ex.Message);
             }
@@ -51,8 +52,8 @@ namespace Pic.Config
 
         public async Task<TabelaProblem<List<Produto>>> ListarProdutos(int Tamanho, int Pagina)
         {
-            if(Pagina < 1) Pagina = 1;
-            if(Tamanho < 1) Tamanho = 10;
+            if (Pagina < 1) Pagina = 1;
+            if (Tamanho < 1) Tamanho = 10;
 
             try
             {
@@ -65,7 +66,7 @@ namespace Pic.Config
                 if (produtos is null || produtos.Count == 0) return StatusProblem.Fail<List<Produto>>("Nenhum produto encontrado");
                 return StatusProblem.Ok("Produtos encontrados com sucesso", produtos);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return StatusProblem.Fail<List<Produto>>(ex.Message);
             }
@@ -95,8 +96,10 @@ namespace Pic.Config
             }
         }
 
-        public async Task<TabelaProblem<Produto>> PagarProduto(Produto produto, int id)
+        public async Task<TabelaProblem<Produto>> PagarProduto(Produto produto, int id, string Token)
         {
+            const string url = "http://localhost/api/enviar";
+
             try
             {
                 var User = await context.Usuarios
@@ -111,8 +114,28 @@ namespace Pic.Config
 
                 if (prod is null) return StatusProblem.Fail<Produto>("Produto não encontrado");
 
-                var result = await enviar.Transacao(User.Id, prod.Preco, produto.Email);
-                if (!result.Sucesso) return StatusProblem.Fail<Produto>(result.Mensagem);
+                if(User.Id == prod.UsuarioId) return StatusProblem.Fail<Produto>("Não pode comprar o seu produto");
+
+                var transfer = new Transferir
+                {
+                    EmailT = prod.Email,
+                    Valor = prod.Preco
+                };
+
+                var json = System.Text.Json.JsonSerializer.Serialize(transfer);
+
+                using HttpClient client = new HttpClient();
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+                client.DefaultRequestHeaders.Add("X-Powered-By", "Pic");
+
+                var response = await client.PostAsync(url, content);
+                if (!response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    return StatusProblem.Fail<Produto>($"Erro ao processar pagamento {result}");
+                }
 
                 return StatusProblem.Ok<Produto>("Produto comprado com sucesso");
             }

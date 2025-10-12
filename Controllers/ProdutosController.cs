@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pic.Interface;
 using Pic.Parametros;
+using Pic.Tables;
 
 namespace Pic.Controllers
 {
@@ -53,6 +54,29 @@ namespace Pic.Controllers
 
             if(!int.TryParse(id, out int Userid)) return BadRequest(new { message = "Não foi possivel converte o Id" });
             var result = await produtos.SeusProdutos(Userid, 10, pagina);
+
+            if (!result.Sucesso) return BadRequest(new { message = result.Mensagem });
+            return Ok(new { message = result.Mensagem, data = result.Dados });
+        }
+
+        [HttpPost("Comprar")]
+        [Authorize(AuthenticationSchemes = "Usuarios")]
+        [EnableRateLimiting("Fixed")]
+        public async Task<IActionResult> ComprarProduto(Produto produto)
+        {
+            if(!ModelState.IsValid) return BadRequest(new { message = ModelState });
+
+            var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+
+            if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+                return BadRequest(new { message = "Token ausente ou inválido." });
+
+            var token = authHeader["Bearer ".Length..];
+
+            var id = HttpContext.User.Claims.FirstOrDefault(c => c.Type == "Id")?.Value;
+            if(!int.TryParse(id, out int Userid)) return BadRequest(new { message = "Não foi possivel converte o Id" });
+
+            var result = await produtos.PagarProduto(produto, Userid, token);
 
             if (!result.Sucesso) return BadRequest(new { message = result.Mensagem });
             return Ok(new { message = result.Mensagem, data = result.Dados });
