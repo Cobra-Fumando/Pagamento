@@ -5,6 +5,8 @@ using Pic.Context;
 using Pic.Parametros;
 using Pic.Tables;
 using Pic.Interface;
+using Microsoft.Extensions.Caching.Memory;
+using Pic.Mensageiro;
 
 namespace Pic.Config
 {
@@ -13,25 +15,31 @@ namespace Pic.Config
         private readonly AppDbContext context;
         private readonly Token token;
         private readonly PasswordHash passwordHash;
-        public Users(AppDbContext context, Token token, PasswordHash passwordHash)
+        private readonly IMemoryCache memoryCache;
+        private readonly EnviarRabbit rabbit;
+        private readonly ILogger<Users> logger;
+        public Users(AppDbContext context, Token token, PasswordHash passwordHash, IMemoryCache memoryCache, EnviarRabbit rabbit, ILogger<Users> logger)
         {
             this.context = context;
             this.token = token;
             this.passwordHash = passwordHash;
+            this.memoryCache = memoryCache;
+            this.rabbit = rabbit;
+            this.logger = logger;
         }
 
-        public async Task<TabelaProblem<UsuarioDto>> Criar(UsuarioDto usuario)
+        public async Task<TabelaProblem<string>> Criar(UsuarioDto usuario)
         {
-            if (usuario is null) return StatusProblem.Fail<UsuarioDto>("Dados inválidos");
+            if (usuario is null) return StatusProblem.Fail<string>("Dados inválidos");
 
             var result = CriarUser.ValidarCodicao(usuario);
-            if (!result.Sucesso) return StatusProblem.Fail<UsuarioDto>(result.Mensagem);
+            if (!result.Sucesso) return StatusProblem.Fail<string>(result.Mensagem);
 
             bool valido = VerificarRegex.FormatoCpf(usuario.Cpf, out string CpfReplace);
-            if (!valido) return StatusProblem.Fail<UsuarioDto>("Formato do cpf invalido");
+            if (!valido) return StatusProblem.Fail<string>("Formato do cpf invalido");
 
             bool validoTel = VerificarRegex.FormatoTelefone(usuario.Telefone, out string TelefoneReplace);
-            if (!validoTel) return StatusProblem.Fail<UsuarioDto>("Formato do telefone invalido");
+            if (!validoTel) return StatusProblem.Fail<string>("Formato do telefone invalido");
 
             try
             {
@@ -41,9 +49,9 @@ namespace Pic.Config
 
                 if (Usuarioexiste != null)
                 {
-                    if (usuario.Email.ToLower() == Usuarioexiste.Email.ToLower()) return StatusProblem.Fail<UsuarioDto>("Email já cadastrado");
-                    if (Usuarioexiste.Cpf == CpfReplace) return StatusProblem.Fail<UsuarioDto>("Cpf já cadastrado");
-                    if (Usuarioexiste.Telefone == TelefoneReplace) return StatusProblem.Fail<UsuarioDto>("Telefone já cadastrado");
+                    if (usuario.Email.ToLower() == Usuarioexiste.Email.ToLower()) return StatusProblem.Fail<string>("Email já cadastrado");
+                    if (Usuarioexiste.Cpf == CpfReplace) return StatusProblem.Fail<string>("Cpf já cadastrado");
+                    if (Usuarioexiste.Telefone == TelefoneReplace) return StatusProblem.Fail<string>("Telefone já cadastrado");
                 }
 
                 string Hash = passwordHash.Hashar(usuario.Senha);
@@ -57,21 +65,28 @@ namespace Pic.Config
                     Cpf = CpfReplace
                 };
 
+                string Key = $"{usuario.Nome}_{usuario.Email}_{Guid.NewGuid().ToString()}";
+                string Token = token.GenerateTokenConfirm(Key);
+
+                memoryCache.Set(Key, users, new MemoryCacheEntryOptions
+                {
+                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(15),
+                });
+
                 usuario.Email = users.Email;
 
-                await context.Usuarios.AddAsync(users);
-                await context.SaveChangesAsync();
+                await rabbit.Enviar(usuario.Email, Token);
 
-                return StatusProblem.Ok("Criado com sucesso", usuario);
+                return StatusProblem.Ok("Mensagem enviada para ", usuario.Email);
             }
             catch (DbUpdateException ex) when(
                 ex.InnerException?.Message.Contains("UQ_Email") == true || ex.InnerException?.Message.Contains("UQ_Cpf") == true) 
             {
-                return StatusProblem.Fail<UsuarioDto>("Email ou Cpf já cadastrado");
+                return StatusProblem.Fail<string>("Email ou Cpf já cadastrado");
             }
             catch (Exception ex)
             {
-                return StatusProblem.Fail<UsuarioDto>(ex.Message);
+                return StatusProblem.Fail<string>(ex.Message);
             }
         }
 
@@ -103,6 +118,30 @@ namespace Pic.Config
             {
                 return StatusProblem.Fail<string>(ex.Message);
             }
+        }
+
+        public async Task<TabelaProblem<string>> Confirm(string Token)
+        {
+            var principal = token.ValidateToken(Token);
+
+            if(principal == null) return StatusProblem.Fail<string>("Token invalido ou expirado");
+            var Key = principal.FindFirst("Cache")?.Value;
+
+            if(string.IsNullOrWhiteSpace(Key)) return StatusProblem.Fail<string>("Nenhuma Key encontrada no token");
+
+            if (!memoryCache.TryGetValue(Key, out Usuario? Valor))
+            {
+                return StatusProblem.Fail<string>("Nada encontrado nessa key");
+            }
+
+            if(Valor == null) return StatusProblem.Fail<string>("Nenhum valor encontrado");
+
+            await context.Usuarios.AddAsync(Valor);
+            await context.SaveChangesAsync();
+
+            memoryCache.Remove(Key);
+
+            return StatusProblem.Ok<string>("Conta criada com sucesso");
         }
     }
 }

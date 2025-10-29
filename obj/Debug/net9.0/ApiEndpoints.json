@@ -1,0 +1,151 @@
+[
+  {
+    "ContainingType": "Pic.Controllers.ProdutosController",
+    "Method": "AdicionarProduto",
+    "RelativePath": "api/Produtos/Adicionar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "produto",
+        "Type": "Pic.Parametros.ProdutosDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.ProdutosController",
+    "Method": "ComprarProduto",
+    "RelativePath": "api/Produtos/Comprar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "produto",
+        "Type": "Pic.Tables.Produto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.ProdutosController",
+    "Method": "ListarProdutos",
+    "RelativePath": "api/Produtos/Listar",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Tamanho",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "Pagina",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.ProdutosController",
+    "Method": "MeusProdutos",
+    "RelativePath": "api/Produtos/MeusProdutos/{pagina}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pagina",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.TransferirController",
+    "Method": "Transfer",
+    "RelativePath": "api/Transferir/Enviar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "transferir",
+        "Type": "Pic.Parametros.Transferir",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.TransferirController",
+    "Method": "GetTransacoes",
+    "RelativePath": "api/Transferir/GetTransacoes/{pagina}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pagina",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.UsuariosController",
+    "Method": "Confirm",
+    "RelativePath": "api/Usuarios/Confirm",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "Token",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.UsuariosController",
+    "Method": "Criar",
+    "RelativePath": "api/Usuarios/Criar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "usuario",
+        "Type": "Pic.Parametros.UsuarioDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Pic.Controllers.UsuariosController",
+    "Method": "Login",
+    "RelativePath": "api/Usuarios/Logar",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "logar",
+        "Type": "Pic.Parametros.Logar",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

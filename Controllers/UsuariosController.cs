@@ -40,5 +40,16 @@ namespace Pic.Controllers
 
             return Ok(new { Mensagem = Result.Mensagem, Token = Result.Dados });
         }
+
+        [HttpPost("Confirm")]
+        [EnableRateLimiting("Fixed")]
+        public async Task<IActionResult> Confirm([FromQuery] string Token)
+        {
+            var Result = await users.Confirm(Token);
+
+            if(!Result.Sucesso) return Unauthorized(new { Mensagem = Result.Mensagem });
+
+            return Ok(new { Mensagem = Result });
+        }
     }
 }

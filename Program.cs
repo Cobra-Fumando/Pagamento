@@ -4,9 +4,11 @@ using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Pic.Background;
 using Pic.Classes;
 using Pic.Config;
 using Pic.Interface;
+using Pic.Mensageiro;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,10 +23,14 @@ builder.Services.AddOpenApi();
 builder.Services.AddSingleton<Token>();
 builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 builder.Services.AddSingleton<PasswordHash>();
-builder.Services.AddScoped<IEnviar,Enviar>();
+builder.Services.AddSingleton<EnviarRabbit>();
+builder.Services.AddScoped<IEnviar, Enviar>();
 builder.Services.AddScoped<IUsers, Users>();
 builder.Services.AddScoped<IProdutos, Produtos>();
 
+builder.Services.AddHostedService<EnviarEmail>();
+
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpContextAccessor();
 
 builder.Services.AddDbContextPool<Pic.Context.AppDbContext>(options => 
@@ -129,6 +135,17 @@ builder.Services.Configure<GzipCompressionProviderOptions>(options =>
     options.Level = System.IO.Compression.CompressionLevel.Optimal;
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", builder =>
+    {
+        builder.WithOrigins("http://localhost:4200")
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -136,6 +153,8 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.UseCors("CorsPolicy");
 app.UseRateLimiter();
 app.UseHttpsRedirection();
 app.UseAuthentication();
