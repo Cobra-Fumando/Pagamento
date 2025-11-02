@@ -20,10 +20,11 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 //builder.Services.AddScoped<EmailVerify>();
-builder.Services.AddSingleton<Token>();
+builder.Services.AddSingleton<IToken, Token>();
 builder.Services.AddSingleton<IPasswordHasher<Users>, PasswordHasher<Users>>();
 builder.Services.AddSingleton<PasswordHash>();
-builder.Services.AddSingleton<EnviarRabbit>();
+builder.Services.AddSingleton<IEnviaRabbit,EnviarRabbit>();
+builder.Services.AddSingleton<IEmailSmtp, EmailSmtp>();
 builder.Services.AddScoped<IEnviar, Enviar>();
 builder.Services.AddScoped<IUsers, Users>();
 builder.Services.AddScoped<IProdutos, Produtos>();

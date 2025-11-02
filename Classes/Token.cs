@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using Pic.Interface;
 using Pic.Parametros;
 using Pic.Tables;
 using System.IdentityModel.Tokens.Jwt;
@@ -7,7 +8,7 @@ using System.Text;
 
 namespace Pic.Classes
 {
-    public class Token
+    public class Token : IToken
     {
         private readonly string Key;
         private readonly string Issuer;
@@ -94,12 +95,10 @@ namespace Pic.Classes
             }
             catch (SecurityTokenExpiredException)
             {
-                Console.WriteLine("⚠️ Token expirado.");
                 return null;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"⚠️ Token inválido: {ex.Message}");
                 return null;
             }
         }

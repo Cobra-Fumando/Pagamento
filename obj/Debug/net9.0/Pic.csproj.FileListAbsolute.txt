@@ -137,3 +137,7 @@ C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\Pic.genruntimeconfig.cache
 C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\ref\Pic.dll
 C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\Pic.sourcelink.json
 C:\Users\Thiago\source\repos\Pic\Pic\bin\Debug\net9.0\RabbitMQ.Client.dll
+C:\Users\Thiago\source\repos\Pic\Pic\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+C:\Users\Thiago\source\repos\Pic\Pic\bin\Debug\net9.0\BouncyCastle.Cryptography.dll
+C:\Users\Thiago\source\repos\Pic\Pic\bin\Debug\net9.0\MailKit.dll
+C:\Users\Thiago\source\repos\Pic\Pic\bin\Debug\net9.0\MimeKit.dll

@@ -13,10 +13,10 @@ namespace Pic.Config
     public class Users : IUsers
     {
         private readonly AppDbContext context;
-        private readonly Token token;
+        private readonly IToken token;
         private readonly PasswordHash passwordHash;
         private readonly IMemoryCache memoryCache;
-        private readonly EnviarRabbit rabbit;
+        private readonly IEnviaRabbit rabbit;
         private readonly ILogger<Users> logger;
         public Users(AppDbContext context, Token token, PasswordHash passwordHash, IMemoryCache memoryCache, EnviarRabbit rabbit, ILogger<Users> logger)
         {
@@ -76,6 +76,7 @@ namespace Pic.Config
                 usuario.Email = users.Email;
 
                 await rabbit.Enviar(usuario.Email, Token);
+                //await rabbit.Enviar(usuario.Email, Key);
 
                 return StatusProblem.Ok("Mensagem enviada para ", usuario.Email);
             }
@@ -126,6 +127,7 @@ namespace Pic.Config
 
             if(principal == null) return StatusProblem.Fail<string>("Token invalido ou expirado");
             var Key = principal.FindFirst("Cache")?.Value;
+            //key que iria vir do email
 
             if(string.IsNullOrWhiteSpace(Key)) return StatusProblem.Fail<string>("Nenhuma Key encontrada no token");
 
