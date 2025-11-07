@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Pic.Interface;
-using Pic.Parametros;
 using Pic.Tables;
+using Pic.Tables.Models;
 
 namespace Pic.Controllers
 {

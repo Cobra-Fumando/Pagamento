@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Pic.Parametros
+namespace Pic.Tables.Models
 {
     public class UsuarioDto
     {

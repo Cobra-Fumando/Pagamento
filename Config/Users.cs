@@ -2,11 +2,11 @@
 using Pic.Classes;
 using Pic.Condicao;
 using Pic.Context;
-using Pic.Parametros;
 using Pic.Tables;
 using Pic.Interface;
 using Microsoft.Extensions.Caching.Memory;
 using Pic.Mensageiro;
+using Pic.Tables.Models;
 
 namespace Pic.Config
 {
@@ -76,17 +76,19 @@ namespace Pic.Config
                 usuario.Email = users.Email;
 
                 await rabbit.Enviar(usuario.Email, Token);
-                //await rabbit.Enviar(usuario.Email, Key);
 
+                logger.LogInformation($"Mensagem enviada com sucesso para {usuario.Email}");
                 return StatusProblem.Ok("Mensagem enviada para ", usuario.Email);
             }
             catch (DbUpdateException ex) when(
                 ex.InnerException?.Message.Contains("UQ_Email") == true || ex.InnerException?.Message.Contains("UQ_Cpf") == true) 
             {
+                logger.LogWarning(ex, "Tentativa de cadastro com Email ou Cpf já existente");
                 return StatusProblem.Fail<string>("Email ou Cpf já cadastrado");
             }
             catch (Exception ex)
             {
+                logger.LogCritical(ex, "Erro ao criar usuário");
                 return StatusProblem.Fail<string>(ex.Message);
             }
         }
@@ -113,37 +115,47 @@ namespace Pic.Config
                 if (!passwordHash.Verificar(logar.Senha, user.Senha)) return StatusProblem.Fail<string>("Email ou Senha errado");
 
                 var tokenGerado = token.GenerateToken(user);
+
+                logger.LogInformation($"Usuário {user.Email} logado com sucesso");
                 return StatusProblem.Ok("Login realizado com sucesso", tokenGerado);
             }
             catch (Exception ex)
             {
+                logger.LogWarning(ex, "Erro ao logar usuário");
                 return StatusProblem.Fail<string>(ex.Message);
             }
         }
 
         public async Task<TabelaProblem<string>> Confirm(string Token)
         {
-            var principal = token.ValidateToken(Token);
-
-            if(principal == null) return StatusProblem.Fail<string>("Token invalido ou expirado");
-            var Key = principal.FindFirst("Cache")?.Value;
-            //key que iria vir do email
-
-            if(string.IsNullOrWhiteSpace(Key)) return StatusProblem.Fail<string>("Nenhuma Key encontrada no token");
-
-            if (!memoryCache.TryGetValue(Key, out Usuario? Valor))
+            try
             {
-                return StatusProblem.Fail<string>("Nada encontrado nessa key");
+                var principal = token.ValidateToken(Token);
+
+                if (principal == null) return StatusProblem.Fail<string>("Token invalido ou expirado");
+                var Key = principal.FindFirst("Cache")?.Value;
+
+                if (string.IsNullOrWhiteSpace(Key)) return StatusProblem.Fail<string>("Nenhuma Key encontrada no token");
+
+                if (!memoryCache.TryGetValue(Key, out Usuario? Valor))
+                {
+                    return StatusProblem.Fail<string>("Nada encontrado nessa key");
+                }
+
+                if (Valor == null) return StatusProblem.Fail<string>("Nenhum valor encontrado");
+
+                await context.Usuarios.AddAsync(Valor);
+                await context.SaveChangesAsync();
+
+                memoryCache.Remove(Key);
+
+                logger.LogInformation($"Usuário {Valor.Email} confirmado com sucesso");
+                return StatusProblem.Ok<string>("Conta criada com sucesso");
+            }catch(Exception ex)
+            {
+                logger.LogCritical(ex, "Erro ao confirmar usuário");
+                return StatusProblem.Fail<string>("Erro ao confirmar usuário");
             }
-
-            if(Valor == null) return StatusProblem.Fail<string>("Nenhum valor encontrado");
-
-            await context.Usuarios.AddAsync(Valor);
-            await context.SaveChangesAsync();
-
-            memoryCache.Remove(Key);
-
-            return StatusProblem.Ok<string>("Conta criada com sucesso");
         }
     }
 }

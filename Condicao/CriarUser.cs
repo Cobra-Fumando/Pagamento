@@ -1,6 +1,6 @@
 ﻿using Pic.Classes;
-using Pic.Parametros;
 using Pic.Tables;
+using Pic.Tables.Models;
 
 namespace Pic.Condicao
 {

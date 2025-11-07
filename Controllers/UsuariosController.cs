@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Pic.Config;
-using Pic.Parametros;
 using Pic.Interface;
 using Microsoft.AspNetCore.RateLimiting;
+using Pic.Tables.Models;
 
 namespace Pic.Controllers
 {

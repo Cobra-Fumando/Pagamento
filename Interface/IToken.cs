@@ -1,4 +1,4 @@
-﻿using Pic.Parametros;
+﻿using Pic.Tables.Models;
 using System.Security.Claims;
 
 namespace Pic.Interface

@@ -8,7 +8,7 @@ namespace Pic.Classes
         private readonly IPasswordHasher<Users> _passwordHasher;
         public PasswordHash(IPasswordHasher<Users> passwordHasher)
         {
-            this._passwordHasher = passwordHasher;
+            _passwordHasher = passwordHasher;
         }
 
         public string Hashar(string Senha)

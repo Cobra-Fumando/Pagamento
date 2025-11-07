@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using Pic.Interface;
-using Pic.Parametros;
 using Pic.Tables;
+using Pic.Tables.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

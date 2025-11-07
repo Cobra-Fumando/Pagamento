@@ -1,10 +1,10 @@
 ﻿using Pic.Classes;
 using Pic.Context;
 using Pic.Interface;
-using Pic.Parametros;
 using Pic.Tables;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
+using Pic.Tables.Models;
 
 namespace Pic.Config
 {
@@ -12,10 +12,14 @@ namespace Pic.Config
     {
         private readonly AppDbContext context;
         private readonly IEnviar enviar;
-        public Produtos(AppDbContext context, IEnviar enviar)
+        private readonly HttpClient client;
+        private readonly ILogger<Produtos> logger;
+        public Produtos(AppDbContext context, IEnviar enviar, IHttpClientFactory httpClientFactory, ILogger<Produtos> logger)
         {
             this.context = context;
             this.enviar = enviar;
+            client = httpClientFactory.CreateClient("PicApi");
+            this.logger = logger;
         }
 
         public async Task<TabelaProblem<Produto>> AdicionarProduto(ProdutosDto produto, int id)
@@ -44,6 +48,16 @@ namespace Pic.Config
                 await context.SaveChangesAsync();
                 return StatusProblem.Ok("Produto adicionado com sucesso", product);
             }
+            catch (DbUpdateException ex)
+            {
+                logger.LogError("erro ao consultar os dados");
+                return StatusProblem.Fail<Produto>($"Erro ao consultar os dados {ex}");
+            }
+            catch (System.Data.Common.DbException ex)
+            {
+                logger.LogError("Erro de acesso ao banco de dados");
+                return StatusProblem.Fail<Produto>($"Erro de conexão ou comando SQL no banco de dados: {ex}");
+            }
             catch (Exception ex)
             {
                 return StatusProblem.Fail<Produto>(ex.Message);
@@ -65,6 +79,11 @@ namespace Pic.Config
 
                 if (produtos is null || produtos.Count == 0) return StatusProblem.Fail<List<Produto>>("Nenhum produto encontrado");
                 return StatusProblem.Ok("Produtos encontrados com sucesso", produtos);
+            }
+            catch (System.Data.Common.DbException ex)
+            {
+                logger.LogError("Erro de acesso ao banco de dados");
+                return StatusProblem.Fail<List<Produto>>($"Erro de conexão ou comando SQL no banco de dados: {ex}");
             }
             catch (Exception ex)
             {
@@ -90,6 +109,11 @@ namespace Pic.Config
                 if (produtos is null || produtos.Count == 0) return StatusProblem.Fail<List<Produto>>("Nenhum produto encontrado");
                 return StatusProblem.Ok("Produtos encontrados com sucesso", produtos);
             }
+            catch (System.Data.Common.DbException ex)
+            {
+                logger.LogError("Erro de acesso ao banco de dados");
+                return StatusProblem.Fail<List<Produto>>($"Erro de conexão ou comando SQL no banco de dados: {ex}");
+            }
             catch (Exception ex)
             {
                 return StatusProblem.Fail<List<Produto>>(ex.Message);
@@ -98,51 +122,85 @@ namespace Pic.Config
 
         public async Task<TabelaProblem<Produto>> PagarProduto(Produto produto, int id, string Token)
         {
-            const string url = "http://localhost/api/enviar";
+            const string url = "api/enviar";
+            int tentativas = 3;
 
-            try
+            Usuario? User = null;
+            Produto? prod = null;
+
+            for (int i = 0; i < tentativas; i++)
             {
-                var User = await context.Usuarios
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(p => p.Id == id);
-
-                if (User is null) return StatusProblem.Fail<Produto>("Usuario não encontrado");
-
-                var prod = await context.Produto
-                                .AsNoTracking()
-                                .FirstOrDefaultAsync(p => p.Id == produto.Id);
-
-                if (prod is null) return StatusProblem.Fail<Produto>("Produto não encontrado");
-
-                if(User.Id == prod.UsuarioId) return StatusProblem.Fail<Produto>("Não pode comprar o seu produto");
-
-                var transfer = new Transferir
+                try
                 {
-                    EmailT = prod.Email,
-                    Valor = prod.Preco
-                };
+                    if (User is null && prod is null)
+                    {
+                        try
+                        {
+                            User = await context.Usuarios
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync(p => p.Id == id);
 
-                var json = System.Text.Json.JsonSerializer.Serialize(transfer);
+                            if (User is null) return StatusProblem.Fail<Produto>("Usuario não encontrado");
 
-                using HttpClient client = new HttpClient();
-                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                            prod = await context.Produto
+                                            .AsNoTracking()
+                                            .FirstOrDefaultAsync(p => p.Id == produto.Id);
 
-                client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
-                client.DefaultRequestHeaders.Add("X-Powered-By", "Pic");
+                            if (prod is null) return StatusProblem.Fail<Produto>("Produto não encontrado");
+                        }
+                        catch (DbUpdateException ex)
+                        {
+                            logger.LogError("erro ao consultar os dados");
+                            return StatusProblem.Fail<Produto>($"Erro ao consultar os dados {ex}");
+                        }
+                        catch (System.Data.Common.DbException ex)
+                        {
+                            logger.LogError("Erro de acesso ao banco de dados");
+                            return StatusProblem.Fail<Produto>($"Erro de conexão ou comando SQL no banco de dados: {ex}");
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError("Erro inesperado ao consultar os dados");
+                            return StatusProblem.Fail<Produto>($"Erro inesperado ao consultar os dados: {ex}");
+                        }
+                    }
 
-                var response = await client.PostAsync(url, content);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var result = await response.Content.ReadAsStringAsync();
-                    return StatusProblem.Fail<Produto>($"Erro ao processar pagamento {result}");
+                    if (User?.Id == prod?.UsuarioId) return StatusProblem.Fail<Produto>("Não pode comprar o proprio produto");
+
+                    var transfer = new Transferir
+                    {
+                        EmailT = prod.Email,
+                        Valor = prod.Preco
+                    };
+
+                    var json = System.Text.Json.JsonSerializer.Serialize(transfer);
+
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+
+                    var response = await client.PostAsync(url, content);
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+                        return StatusProblem.Fail<Produto>($"Erro ao processar pagamento {result}");
+                    }
+
+                    break;
                 }
+                catch (Exception ex)
+                {
+                    if (i == tentativas - 1)
+                    {
+                        logger.LogError(ex, "Falha ao processar pagamento após várias tentativas.");
+                        throw;
+                    }
 
-                return StatusProblem.Ok<Produto>("Produto comprado com sucesso");
+                    logger.LogWarning(ex, $"Tentativa {i + 1} falhou ao processar pagamento. Retentando...");
+                    await Task.Delay(2000);
+                }
             }
-            catch (Exception ex)
-            {
-                return StatusProblem.Fail<Produto>(ex.Message);
-            }
+            return StatusProblem.Ok<Produto>("Produto comprado com sucesso");
         }
     }
 }

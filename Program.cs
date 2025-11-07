@@ -27,7 +27,14 @@ builder.Services.AddSingleton<IEnviaRabbit,EnviarRabbit>();
 builder.Services.AddSingleton<IEmailSmtp, EmailSmtp>();
 builder.Services.AddScoped<IEnviar, Enviar>();
 builder.Services.AddScoped<IUsers, Users>();
-builder.Services.AddScoped<IProdutos, Produtos>();
+builder.Services.AddScoped<IProdutos, Produtos>();  
+
+builder.Services.AddHttpClient("PicApi", client =>
+{
+    client.BaseAddress = new Uri("http://localhost/");
+    client.DefaultRequestHeaders.Add("X-Powered-By", "Pic");
+    client.Timeout = TimeSpan.FromSeconds(30);
+});
 
 builder.Services.AddHostedService<EnviarEmail>();
 
@@ -49,7 +56,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 ValidateIssuerSigningKey = true,
                 ValidIssuer = builder.Configuration["Bearer:Issuer"],
                 ValidAudience = builder.Configuration["Bearer:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Bearer:Key"]))
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Bearer:Key"]))    
             };
 
             options.Events = new JwtBearerEvents

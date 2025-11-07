@@ -47,7 +47,7 @@ namespace Pic.Background
 
                     logger.LogInformation($" [x] Enviando email para {message.Email}");
 
-                    tasks = emailSmtp.Enviar("Remetente", "destinatario", "sdfac@", "Nome", "Teste", "teste", message.Token);
+                    tasks = emailSmtp.Enviar("Remetente", message.Email, "sdfac@", "Nome", message.Assunto, message.Corpo, message.Token);
                 }
                 catch (Exception ex)
                 {
@@ -55,9 +55,15 @@ namespace Pic.Background
                     return;
                 }
 
-                lock (lockObject)
+                bool lockTaken = false;
+
+                try
                 {
+                    Monitor.Enter(lockObject, ref lockTaken);
                     processingTasks.Add(tasks);
+                }finally
+                {
+                    if (lockTaken) Monitor.Exit(lockObject);
                 }
 
                 try
@@ -66,9 +72,15 @@ namespace Pic.Background
                 }
                 finally
                 {
-                    lock (lockObject)
+                    lockTaken = false;
+                    try 
                     {
+                        Monitor.Enter(lockObject, ref lockTaken);
                         processingTasks.Remove(tasks);
+                    }
+                    finally
+                    {
+                        if(lockTaken) Monitor.Exit(lockObject);
                     }
                 }
 
@@ -85,16 +97,23 @@ namespace Pic.Background
                 await channel.BasicCancelAsync(consumeTag);
             }
 
-            Task[] tasks;
-            lock (lockObject)
+            List<Task> tasks;
+            bool lockTaken = false;
+
+            try
             {
-                tasks = processingTasks.ToArray();
+                Monitor.Enter(lockObject, ref lockTaken);
+                tasks = processingTasks.ToList();
+            }
+            finally 
+            { 
+                if (lockTaken) Monitor.Exit(lockObject);
             }
 
-            await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(TimeSpan.FromSeconds(30), stoppingToken));
+            await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(TimeSpan.FromSeconds(60), stoppingToken));
 
-            if (channel!.IsOpen) await channel.CloseAsync();
-            if (connection!.IsOpen) await connection.CloseAsync();
+            if (channel!.IsOpen) await channel.DisposeAsync();
+            if (connection!.IsOpen) await connection.DisposeAsync();
 
             logger.LogInformation("Serviço de envio de email está parando.");
         }

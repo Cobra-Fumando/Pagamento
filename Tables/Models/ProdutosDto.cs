@@ -1,4 +1,4 @@
-﻿namespace Pic.Parametros
+﻿namespace Pic.Tables.Models
 {
     public class ProdutosDto
     {

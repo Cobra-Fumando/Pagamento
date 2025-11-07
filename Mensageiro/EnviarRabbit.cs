@@ -9,7 +9,11 @@ namespace Pic.Mensageiro
     public class EnviarRabbit : IEnviaRabbit
     {
         private string FilaA = "FilaA";
-        public EnviarRabbit() { }
+        private readonly ILogger<EnviarRabbit> logger;
+        public EnviarRabbit(ILogger<EnviarRabbit> logger)
+        {
+            this.logger = logger;
+        }
 
         public async Task Enviar(string Email, string Token)
         {
@@ -40,15 +44,18 @@ namespace Pic.Mensageiro
 
                     await channel.BasicPublishAsync("", FilaA, Corpo);
 
+                    logger.LogInformation($"Mensagem enviada para fila com sucesso: {Email}");
                     break;
                 }
                 catch (Exception ex)
                 {
                     if(i == tentativas - 1)
                     {
+                        logger.LogError(ex, "Falha ao enviar mensagem para fila após várias tentativas.");
                         throw;
                     }
 
+                    logger.LogWarning(ex, $"Tentativa {i + 1} falhou ao enviar mensagem para fila. Retentando...");
                     await Task.Delay(2000);
                 }
             }

@@ -1,6 +1,6 @@
 ﻿using Pic.Tables;
 
-namespace Pic.Parametros
+namespace Pic.Tables.Models
 {
     public class UsuarioLoginDto
     {

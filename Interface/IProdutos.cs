@@ -1,5 +1,5 @@
-﻿using Pic.Parametros;
-using Pic.Tables;
+﻿using Pic.Tables;
+using Pic.Tables.Models;
 
 namespace Pic.Interface
 {
